@@ -17,8 +17,7 @@
           - "'kbdinteractiveauthentication no' in sshd.stdout"
           - "'maxauthtries 3' in sshd.stdout"
     - name: Check Xray config as service account
-      ansible.builtin.command: /usr/local/bin/xray run -test -config /etc/xray/config.json
-      become_user: xray
+      ansible.builtin.command: runuser -u xray -- /usr/local/bin/xray run -test -config /etc/xray/config.json
       changed_when: false
       no_log: true
     - name: Verify system services

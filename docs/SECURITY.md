@@ -2,7 +2,7 @@
 
 Admin SSH key and sudo are verified in a distinct session before root/password authentication is disabled. KbdInteractiveAuthentication=no, MaxAuthTries=3. Existing authorized keys are retained. Root account itself is retained for provider-console recovery.
 
-UFW denies incoming by default, permits outgoing, allows actual SSH TCP port and TCP/443. Existing rules are not reset: audit additional rules on nonempty servers. IPv6 firewall is retained; Xray listens on IPv4 intentionally. Fail2ban SSH jail uses systemd journal, five failures per ten minutes and one-hour bans.
+UFW denies incoming by default, permits outgoing, allows actual SSH TCP port and TCP/443. Existing rules are not reset: audit additional rules on nonempty servers. IPv6 firewall rules are retained; no public SOCKS or DNS listener is installed. Fail2ban SSH jail uses systemd journal, five failures per ten minutes and one-hour bans.
 
 Security update timers and unattended-upgrades are enabled. This cannot create Ubuntu Pro entitlement: 20.04 without ESM is a temporary accepted risk. systemd-timesyncd maintains time. Journald is capped to 100 MB persistent, 30 MB runtime, seven days. Existing rsyslog/logrotate policy should be inspected separately.
 

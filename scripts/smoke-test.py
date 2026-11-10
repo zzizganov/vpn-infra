@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 """Use actual VLESS REALITY outbound; verify egress and proxy-side DNS."""
-import json
+import os
 from pathlib import Path
 import subprocess
 import sys
 import time
+os.umask(0o077)
 root = Path(__file__).resolve().parent.parent
 expected = sys.argv[1]
 config = root / '.secrets/client.json'
