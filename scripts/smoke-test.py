@@ -8,7 +8,7 @@ import time
 os.umask(0o077)
 root = Path(__file__).resolve().parent.parent
 expected = sys.argv[1]
-config = root / '.secrets/client.json'
+config = Path(sys.argv[2]).resolve() if len(sys.argv) > 2 else root / '.secrets/client.json'
 subprocess.run([str(root / '.artifacts/xray'), 'run', '-test', '-config', str(config)],
                check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 with open(root / '.secrets/client-test.log', 'w') as log:

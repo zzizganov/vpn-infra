@@ -9,3 +9,11 @@ Xray not starting: run systemctl status, restricted journal and config test. Che
 DNS failures: SOCKS must use remote resolution (`socks5h`, not local socks5 resolution). In TUN configure remote DNS and interception; inspect direct fallback and IPv6 bypass. Device DNS leak checks must run on that device, not solely on the VPS.
 
 APT on this VPS originally used an unreachable provider mirror. It was replaced with official archive/security Ubuntu endpoints. The aborted release upgrade stopped during downloads; focal package sources and clean dpkg state were verified before VPN deployment.
+
+## Desktop fails while phone works on the same Wi-Fi
+
+This is not enough evidence for blanket IP blocking. First compare client/core versions, selected profile, REALITY fingerprint, proxy/TUN mode and DNS behavior. The server was rechecked after this report: config valid, service active without restarts, no warning journal entries, two real tunnel requests passed. A 1 MB Cloudflare test took 0.078 s from VPS directly and 2.280 s through the controller's tunnel; these are single small-file observations, not measurements from the affected device or a reliable throughput benchmark.
+
+An alternative local Firefox fingerprint profile was prepared without changing server credentials or the original Chrome profile. Both real tunnel checks passed with Firefox. This does not prove connectivity from the affected device. Use `python3 scripts/smoke-test.py SERVER_IP /absolute/path/to/client-firefox.json` to test a local alternative JSON. Device credentials remain excluded from Git.
+
+Use a current client/core from its official vendor. Xray 26.11.9 changed the default Chrome fingerprint; this is client-side behavior and upgrading the server does not upgrade the fingerprint emitted by an old app. See [official release notes](https://github.com/XTLS/Xray-core/releases/tag/v26.11.9) and [REALITY documentation](https://xtls.github.io/en/config/transports/reality.html). Obtain Happ through [its official site](https://happ.info/), not similarly named third-party download sites.
