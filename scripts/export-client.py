@@ -13,8 +13,9 @@ key = os.path.expanduser(sys.argv[2] if len(sys.argv) > 2 else '~/.ssh/id_ed2551
 ssh = ['ssh', '-F', '/dev/null', '-o', 'BatchMode=yes', '-o', 'StrictHostKeyChecking=yes',
        '-o', 'UpdateHostKeys=no', '-i', key, 'vpnadmin@' + host]
 client = json.loads(subprocess.check_output(ssh + ['sudo -n cat /etc/xray/client.json']))
-root = Path(__file__).resolve().parent.parent / '.secrets'
-root.mkdir(mode=0o700, exist_ok=True)
+root = (Path(sys.argv[3]).expanduser().resolve() if len(sys.argv) > 3
+        else Path(__file__).resolve().parent.parent / '.secrets')
+root.mkdir(mode=0o700, parents=True, exist_ok=True)
 params = {'encryption': 'none', 'flow': 'xtls-rprx-vision', 'security': 'reality',
           'sni': client['serverName'], 'fp': 'chrome', 'pbk': client['publicKey'],
           'sid': client['shortId'], 'type': 'tcp'}
