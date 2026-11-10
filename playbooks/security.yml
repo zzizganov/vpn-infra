@@ -3,6 +3,11 @@
   hosts: vpn
   become: true
   tasks:
+    - name: Discover installed time service
+      ansible.builtin.service_facts:
+    - name: Preserve existing NTP implementation
+      ansible.builtin.set_fact:
+        vpn_time_service: "{{ 'chrony' if 'chrony.service' in ansible_facts.services else 'systemd-timesyncd' }}"
     - name: Verify independent administrator SSH before changes
       ansible.builtin.import_tasks: access-check.yml
     - name: Install security services
@@ -23,9 +28,30 @@
           PubkeyAuthentication yes
           MaxAuthTries 3
       notify: Reload SSH
+    - name: Ensure hardening include is read first
+      ansible.builtin.lineinfile:
+        path: /etc/ssh/sshd_config
+        line: Include /etc/ssh/sshd_config.d/00-vpn-hardening.conf
+        insertbefore: BOF
+        backup: true
+        validate: /usr/sbin/sshd -t -f %s
+      notify: Reload SSH
     - name: Validate complete SSH configuration
       ansible.builtin.command: /usr/sbin/sshd -t
       changed_when: false
+      when: not ansible_check_mode
+    - name: Inspect effective SSH policy before reload
+      ansible.builtin.command: /usr/sbin/sshd -T
+      changed_when: false
+      register: effective_sshd
+      when: not ansible_check_mode
+    - name: Require effective SSH restrictions before reload
+      ansible.builtin.assert:
+        that:
+          - "'permitrootlogin no' in effective_sshd.stdout"
+          - "'passwordauthentication no' in effective_sshd.stdout"
+          - "'kbdinteractiveauthentication no' in effective_sshd.stdout"
+          - "'maxauthtries 3' in effective_sshd.stdout"
       when: not ansible_check_mode
     - name: Flush SSH handler
       ansible.builtin.meta: flush_handlers
@@ -78,7 +104,7 @@
         name: '{{ item }}'
         enabled: true
         state: started
-      loop: [fail2ban, unattended-upgrades, systemd-timesyncd, apt-daily.timer, apt-daily-upgrade.timer]
+      loop: [fail2ban, unattended-upgrades, "{{ vpn_time_service }}", apt-daily.timer, apt-daily-upgrade.timer]
   handlers:
     - name: Reload SSH
       ansible.builtin.systemd:

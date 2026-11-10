@@ -13,10 +13,18 @@ ansible-playbook -i inventory-alt.ini playbooks/bootstrap.yml
 ansible-playbook -i inventory-alt.ini playbooks/security.yml
 ansible-playbook -i inventory-alt.ini playbooks/xray.yml
 ansible-playbook -i inventory-alt.ini playbooks/verify.yml
-python3 scripts/export-client.py 185.247.117.108 ~/.ssh/id_ed25519 ../.secrets/185.247.117.108
+python3 scripts/export-client.py 185.247.117.108 ~/.ssh/id_ed25519 ../.secrets/185.247.117.108 "Амстердам"
 python3 scripts/smoke-test.py 185.247.117.108 ../.secrets/185.247.117.108/client.json
 ```
 
 The new server generates its own UUID, REALITY keypair and shortId. Never copy credentials from the original server. Export to a separate directory so the original QR/profile remain available. Test both servers from the affected home connection; a success from the automation environment alone cannot establish that the provider permits the new path.
 
-Status: branch prepared; production audit/deployment pending initial SSH access.
+Status: deployment and automated verification passed.
+
+Audit on 2026-11-10: Ubuntu 24.04.5 amd64, approximately 1 GB RAM and 16 GB free disk. Only SSH/22 publicly listening before deployment; port 443 free, no dpkg audit errors. Chrony was already running and synchronized. The branch preserves Chrony rather than adding a competing time daemon. Profile display name requested by owner: «Амстердам». This is a user-selected label; physical location is not independently established by the audit.
+
+Provider SSH configuration had no Include directive. The hardening playbook now explicitly includes its policy first and asserts effective root/password restrictions before reloading SSH; administrator access is independently rechecked afterward.
+
+The «Амстердам» client profile uses credentials distinct from the original VPS. Two real VLESS/REALITY HTTPS requests returned egress 185.247.117.108. The existing server and its client files were not changed. Actual reachability from the affected provider and device TUN/DNS leak tests remain pending.
+
+Final checks: security rerun 17 tasks changed=0; verify 11 tasks passed; Xray rerun 9 tasks changed=0. Unattended-upgrades dry-run exit 0; Chrony synchronized. Public listener audit found only SSH/22 and Xray/443. Server secret file root:root 0600, config root:xray 0640, config directory root:xray 0750. Local per-host credential directory 0700, files 0600. No credentials were published.

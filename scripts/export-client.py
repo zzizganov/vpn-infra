@@ -19,7 +19,7 @@ root.mkdir(mode=0o700, parents=True, exist_ok=True)
 params = {'encryption': 'none', 'flow': 'xtls-rprx-vision', 'security': 'reality',
           'sni': client['serverName'], 'fp': 'chrome', 'pbk': client['publicKey'],
           'sid': client['shortId'], 'type': 'tcp'}
-uri = 'vless' + '://' + client['uuid'] + '@' + host + ':443?' + urllib.parse.urlencode(params) + '#Singapore'
+uri = 'vless' + '://' + client['uuid'] + '@' + host + ':443?' + urllib.parse.urlencode(params) + '#' + urllib.parse.quote(sys.argv[4] if len(sys.argv) > 4 else 'VPS-' + host)
 (root / 'connection.txt').write_text(uri + '\n')
 qrcode.make(uri).save(root / 'connection.png')
 config = {'log': {'loglevel': 'warning', 'access': 'none'},

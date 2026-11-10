@@ -3,6 +3,11 @@
   hosts: vpn
   become: true
   tasks:
+    - name: Discover installed time service
+      ansible.builtin.service_facts:
+    - name: Preserve existing NTP implementation
+      ansible.builtin.set_fact:
+        vpn_time_service: "{{ 'chrony' if 'chrony.service' in ansible_facts.services else 'systemd-timesyncd' }}"
     - name: Verify independent administrator access
       ansible.builtin.import_tasks: access-check.yml
     - name: Inspect effective SSH configuration
@@ -22,7 +27,7 @@
       no_log: true
     - name: Verify system services
       ansible.builtin.command: systemctl is-active {{ item }}
-      loop: [xray, fail2ban, unattended-upgrades, systemd-timesyncd, apt-daily-upgrade.timer]
+      loop: [xray, fail2ban, unattended-upgrades, "{{ vpn_time_service }}", apt-daily-upgrade.timer]
       changed_when: false
     - name: Verify UFW
       ansible.builtin.command: ufw status verbose

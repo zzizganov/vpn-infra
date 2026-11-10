@@ -11,7 +11,7 @@ expected = sys.argv[1]
 config = Path(sys.argv[2]).resolve() if len(sys.argv) > 2 else root / '.secrets/client.json'
 subprocess.run([str(root / '.artifacts/xray'), 'run', '-test', '-config', str(config)],
                check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-with open(root / '.secrets/client-test.log', 'w') as log:
+with open(config.parent / 'client-test.log', 'w') as log:
     process = subprocess.Popen([str(root / '.artifacts/xray'), 'run', '-config', str(config)], stdout=log, stderr=log)
     try:
         time.sleep(2)

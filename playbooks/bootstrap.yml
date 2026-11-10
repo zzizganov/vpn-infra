@@ -54,6 +54,8 @@
           - '{{ ssh_port | string }}'
           - '{{ admin_user }}@{{ ansible_host }}'
           - sudo -n /usr/bin/true
+      vars:
+        ansible_remote_tmp: /tmp/vpn-ansible-delegate
       delegate_to: localhost
       become: false
       changed_when: false

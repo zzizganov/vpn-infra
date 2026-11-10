@@ -4,6 +4,8 @@ Ansible + Bash, Xray-core on TCP/443, VLESS with `xtls-rprx-vision`, REALITY ove
 
 Architecture: device → encrypted REALITY connection → VPS:443 → Internet. REALITY target is independently checked for certificate validity, TLS 1.3 and H2 before deployment. Target/SNI defaults are examples and must pass this check from each new VPS.
 
+This branch deploys the additional VPS as the **«Амстердам»** profile. Its audited OS is Ubuntu 24.04.5; see [alternate deployment](docs/ALTERNATE-VPS.md). The original VPS and credentials are retained for comparison.
+
 ## Quick start
 
 Use Ubuntu 24.04 for persistent deployments. Ubuntu 20.04 here is an explicitly accepted temporary compatibility experiment; standard support has ended and Ubuntu Pro is not attached.
