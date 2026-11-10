@@ -28,3 +28,7 @@ Provider SSH configuration had no Include directive. The hardening playbook now 
 The «Амстердам» client profile uses credentials distinct from the original VPS. Two real VLESS/REALITY HTTPS requests returned egress 185.247.117.108. The existing server and its client files were not changed. Actual reachability from the affected provider and device TUN/DNS leak tests remain pending.
 
 Final checks: security rerun 17 tasks changed=0; verify 11 tasks passed; Xray rerun 9 tasks changed=0. Unattended-upgrades dry-run exit 0; Chrony synchronized. Public listener audit found only SSH/22 and Xray/443. Server secret file root:root 0600, config root:xray 0640, config directory root:xray 0750. Local per-host credential directory 0700, files 0600. No credentials were published.
+
+## Shared REALITY target update
+
+At the owner's request both VPS instances now use `mirror.init7.net` for REALITY target and client SNI. The hostname's certificate, TLS 1.3 and ALPN H2 were verified independently from both VPS instances before applying changes. Keypairs, UUIDs and shortIds are preserved. New client links/QR must be imported after changing the target; old Microsoft-SNI profiles are no longer applicable. The ignored inventory-both.ini allows applying the same target to both hosts. Example inventory uses the new hostname, but each new VPS must independently pass the compatibility check.

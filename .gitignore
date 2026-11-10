@@ -9,4 +9,4 @@ __pycache__/
 *.key
 *.pem
 *.vault
-inventory-alt.ini
+inventory-*.ini

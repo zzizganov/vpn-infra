@@ -22,3 +22,5 @@ Deployment observations (2026-11-10):
 Pending external checks: real Android/iOS/Windows/macOS app imports, device-wide TUN routing, IPv6 bypass, DNS leaks and kill switch. No such device test is claimed. This temporary installation is not a completed production security acceptance on a supported OS.
 
 Final Ansible verify: 9 successful tasks, zero changes/failures/unreachable hosts. Repeated xray deployment: 9 successful tasks, changed=0; no secret rotation or service restart. Initial GitHub Actions run completed successfully, including complete-history Gitleaks scan.
+
+Subsequent shared target change: mirror.init7.net replaced www.microsoft.com on both hosts after certificate/TLS 1.3/H2 checks from each VPS. Four actual tunneled HTTPS requests passed, two per VPS, returning the respective expected egress IP. Exported UUID/public-key/shortId identities were compared before/after and remained unchanged. Client links and QR were regenerated, including the existing Firefox alternative. Availability from the affected home provider still requires a device-side test with the updated profile.
