@@ -1,0 +1,94 @@
+---
+- name: Harden system after bootstrap has verified administrator
+  hosts: vpn
+  become: true
+  tasks:
+    - name: Verify independent administrator SSH before changes
+      ansible.builtin.import_tasks: access-check.yml
+    - name: Install security services
+      ansible.builtin.apt:
+        name: [ufw, fail2ban, unattended-upgrades]
+        state: present
+        update_cache: true
+        cache_valid_time: 3600
+    - name: Configure SSH restrictions
+      ansible.builtin.copy:
+        dest: /etc/ssh/sshd_config.d/00-vpn-hardening.conf
+        mode: '0600'
+        backup: true
+        content: |
+          PermitRootLogin no
+          PasswordAuthentication no
+          KbdInteractiveAuthentication no
+          PubkeyAuthentication yes
+          MaxAuthTries 3
+      notify: Reload SSH
+    - name: Validate complete SSH configuration
+      ansible.builtin.command: /usr/sbin/sshd -t
+      changed_when: false
+      when: not ansible_check_mode
+    - name: Flush SSH handler
+      ansible.builtin.meta: flush_handlers
+    - name: Verify administrator after SSH reload
+      ansible.builtin.import_tasks: access-check.yml
+    - name: Configure firewall without resetting existing rules
+      ansible.builtin.script: ../scripts/firewall.sh {{ ssh_port }}
+      register: firewall
+      changed_when: '"CHANGED" in firewall.stdout'
+      when: not ansible_check_mode
+    - name: Configure fail2ban
+      ansible.builtin.copy:
+        dest: /etc/fail2ban/jail.d/vpn-sshd.local
+        mode: '0644'
+        backup: true
+        content: |
+          [sshd]
+          enabled = true
+          backend = systemd
+          port = {{ ssh_port }}
+          maxretry = 5
+          findtime = 10m
+          bantime = 1h
+      notify: Restart fail2ban
+    - name: Enable automatic security updates
+      ansible.builtin.copy:
+        dest: /etc/apt/apt.conf.d/20auto-upgrades
+        mode: '0644'
+        backup: true
+        content: |
+          APT::Periodic::Update-Package-Lists "1";
+          APT::Periodic::Unattended-Upgrade "1";
+    - name: Create journal configuration directory
+      ansible.builtin.file:
+        path: /etc/systemd/journald.conf.d
+        state: directory
+        mode: "0755"
+    - name: Limit journal storage
+      ansible.builtin.copy:
+        dest: /etc/systemd/journald.conf.d/vpn.conf
+        mode: '0644'
+        content: |
+          [Journal]
+          SystemMaxUse=100M
+          RuntimeMaxUse=30M
+          MaxRetentionSec=7day
+      notify: Restart journald
+    - name: Enable security and time services
+      ansible.builtin.systemd:
+        name: '{{ item }}'
+        enabled: true
+        state: started
+      loop: [fail2ban, unattended-upgrades, systemd-timesyncd, apt-daily.timer, apt-daily-upgrade.timer]
+  handlers:
+    - name: Reload SSH
+      ansible.builtin.systemd:
+        name: ssh
+        state: reloaded
+    - name: Restart fail2ban
+      ansible.builtin.systemd:
+        name: fail2ban
+        state: restarted
+    - name: Restart journald
+      ansible.builtin.systemd:
+        name: systemd-journald
+        state: restarted

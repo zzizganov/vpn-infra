@@ -1,0 +1,64 @@
+---
+- name: Install verified Xray and persistent REALITY configuration
+  hosts: vpn
+  become: true
+  tasks:
+    - name: Ensure x86_64 Linux
+      ansible.builtin.assert:
+        that: ansible_facts.architecture == 'x86_64'
+    - name: Create service account
+      ansible.builtin.user:
+        name: xray
+        system: true
+        create_home: false
+        shell: /usr/sbin/nologin
+    - name: Create protected configuration directory
+      ansible.builtin.file:
+        path: /etc/xray
+        state: directory
+        owner: root
+        group: xray
+        mode: '0750'
+    - name: Install checksum-verified binary from controller
+      ansible.builtin.copy:
+        src: ../.artifacts/xray
+        dest: /usr/local/bin/xray
+        owner: root
+        group: root
+        mode: '0755'
+        backup: true
+      notify: Restart Xray
+    - name: Check TLS 1.3 and H2 target with certificate validation
+      ansible.builtin.script: ../scripts/check-target.py {{ reality_server_name }}
+      changed_when: false
+      when: not ansible_check_mode
+    - name: Generate persistent secrets and validate configuration before replacement
+      ansible.builtin.script: ../scripts/configure-xray.py {{ reality_server_name }}
+      no_log: true
+      register: config
+      changed_when: '"CHANGED" in config.stdout'
+      when: not ansible_check_mode
+      notify: Restart Xray
+    - name: Install restricted systemd unit
+      ansible.builtin.template:
+        src: ../templates/xray.service.j2
+        dest: /etc/systemd/system/xray.service
+        mode: '0644'
+        backup: true
+      notify: Restart Xray
+    - name: Apply changes
+      ansible.builtin.meta: flush_handlers
+    - name: Enable Xray
+      ansible.builtin.systemd:
+        name: xray
+        daemon_reload: true
+        enabled: true
+        state: started
+      when: not ansible_check_mode
+  handlers:
+    - name: Restart Xray
+      ansible.builtin.systemd:
+        name: xray
+        daemon_reload: true
+        enabled: true
+        state: restarted

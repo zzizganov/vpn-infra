@@ -1,0 +1,25 @@
+---
+- name: Verify new independent SSH session and sudo
+  ansible.builtin.command:
+    argv:
+      - ssh
+      - -F
+      - /dev/null
+      - -o
+      - BatchMode=yes
+      - -o
+      - StrictHostKeyChecking=yes
+      - -o
+      - UpdateHostKeys=no
+      - -o
+      - ControlMaster=no
+      - -i
+      - '{{ ansible_ssh_private_key_file | expanduser }}'
+      - -p
+      - '{{ ssh_port | string }}'
+      - '{{ admin_user }}@{{ ansible_host }}'
+      - sudo -n /usr/bin/true
+  delegate_to: localhost
+  become: false
+  changed_when: false
+  when: not ansible_check_mode

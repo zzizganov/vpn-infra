@@ -1,0 +1,60 @@
+---
+- name: Create administrator and validate independent access
+  hosts: vpn
+  become: true
+  tasks:
+    - name: Create administrator
+      ansible.builtin.user:
+        name: '{{ admin_user }}'
+        shell: /bin/bash
+        groups: sudo
+        append: true
+        create_home: true
+    - name: Create SSH directory
+      ansible.builtin.file:
+        path: '/home/{{ admin_user }}/.ssh'
+        state: directory
+        owner: '{{ admin_user }}'
+        group: '{{ admin_user }}'
+        mode: '0700'
+    - name: Append administrator key without replacing existing keys
+      ansible.builtin.lineinfile:
+        path: '/home/{{ admin_user }}/.ssh/authorized_keys'
+        line: '{{ lookup("file", admin_public_key_file) }}'
+        create: true
+        owner: '{{ admin_user }}'
+        group: '{{ admin_user }}'
+        mode: '0600'
+        backup: true
+    - name: Configure sudo for key-authenticated administrator
+      ansible.builtin.copy:
+        dest: '/etc/sudoers.d/90-{{ admin_user }}'
+        content: |
+          {{ admin_user }} ALL=(ALL:ALL) NOPASSWD: ALL
+        mode: '0440'
+        validate: /usr/sbin/visudo -cf %s
+        backup: true
+    - name: Verify new independent SSH session and sudo
+      ansible.builtin.command:
+        argv:
+          - ssh
+          - -F
+          - /dev/null
+          - -o
+          - BatchMode=yes
+          - -o
+          - StrictHostKeyChecking=yes
+          - -o
+          - UpdateHostKeys=no
+          - -o
+          - ControlMaster=no
+          - -i
+          - '{{ ansible_ssh_private_key_file | expanduser }}'
+          - -p
+          - '{{ ssh_port | string }}'
+          - '{{ admin_user }}@{{ ansible_host }}'
+          - sudo -n /usr/bin/true
+      delegate_to: localhost
+      become: false
+      changed_when: false
+      when: not ansible_check_mode

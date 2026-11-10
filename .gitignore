@@ -1,0 +1,11 @@
+.venv/
+.artifacts/
+.secrets/
+.agents/
+.codex/
+inventory.ini
+*.retry
+__pycache__/
+*.key
+*.pem
+*.vault

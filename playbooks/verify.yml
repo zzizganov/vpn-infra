@@ -1,0 +1,40 @@
+---
+- name: Verify server controls
+  hosts: vpn
+  become: true
+  tasks:
+    - name: Verify independent administrator access
+      ansible.builtin.import_tasks: access-check.yml
+    - name: Inspect effective SSH configuration
+      ansible.builtin.command: /usr/sbin/sshd -T
+      changed_when: false
+      register: sshd
+    - name: Assert SSH restrictions
+      ansible.builtin.assert:
+        that:
+          - "'permitrootlogin no' in sshd.stdout"
+          - "'passwordauthentication no' in sshd.stdout"
+          - "'kbdinteractiveauthentication no' in sshd.stdout"
+          - "'maxauthtries 3' in sshd.stdout"
+    - name: Check Xray config as service account
+      ansible.builtin.command: /usr/local/bin/xray run -test -config /etc/xray/config.json
+      become_user: xray
+      changed_when: false
+      no_log: true
+    - name: Verify system services
+      ansible.builtin.command: systemctl is-active {{ item }}
+      loop: [xray, fail2ban, unattended-upgrades, systemd-timesyncd, apt-daily-upgrade.timer]
+      changed_when: false
+    - name: Verify UFW
+      ansible.builtin.command: ufw status verbose
+      changed_when: false
+      register: ufw
+      failed_when: "'Status: active' not in ufw.stdout"
+    - name: Verify Fail2ban SSH jail
+      ansible.builtin.command: fail2ban-client status sshd
+      changed_when: false
+    - name: Verify service port
+      ansible.builtin.wait_for:
+        host: 127.0.0.1
+        port: 443
+        timeout: 15
