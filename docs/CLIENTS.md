@@ -1,6 +1,6 @@
 # Clients
 
-Sensitive local files: `.secrets/connection.txt` (import URI), `.secrets/connection.png` (QR), `.secrets/client.json` (Xray SOCKS reference config). Never upload them to GitHub, public QR generators, issue trackers or chat. QR is equivalent to the credential.
+Sensitive local files: `.secrets/<site>/connection.txt` (import URI), `.secrets/<site>/connection.png` (QR), `.secrets/<site>/client.json` (Xray SOCKS reference config). Never upload them to GitHub, public QR generators, issue trackers or chat. QR is equivalent to the credential.
 
 | OS | Client option | Import and full-device traffic |
 | --- | --- | --- |

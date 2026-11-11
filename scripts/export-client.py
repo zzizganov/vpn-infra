@@ -14,12 +14,13 @@ ssh = ['ssh', '-F', '/dev/null', '-o', 'BatchMode=yes', '-o', 'StrictHostKeyChec
        '-o', 'UpdateHostKeys=no', '-i', key, 'vpnadmin@' + host]
 client = json.loads(subprocess.check_output(ssh + ['sudo -n cat /etc/xray/client.json']))
 root = (Path(sys.argv[3]).expanduser().resolve() if len(sys.argv) > 3
-        else Path(__file__).resolve().parent.parent / '.secrets')
+        else Path(__file__).resolve().parent.parent / '.secrets' /
+        {'45.130.165.105': 'singapore', '185.247.117.108': 'amsterdam'}.get(host, host))
 root.mkdir(mode=0o700, parents=True, exist_ok=True)
 params = {'encryption': 'none', 'flow': 'xtls-rprx-vision', 'security': 'reality',
           'sni': client['serverName'], 'fp': 'chrome', 'pbk': client['publicKey'],
           'sid': client['shortId'], 'type': 'tcp', 'spx': '/'}
-uri = 'vless' + '://' + client['uuid'] + '@' + host + ':443?' + urllib.parse.urlencode(params) + '#' + urllib.parse.quote(sys.argv[4] if len(sys.argv) > 4 else 'VPS-' + host)
+uri = 'vless' + '://' + client['uuid'] + '@' + host + ':443?' + urllib.parse.urlencode(params) + '#' + urllib.parse.quote(sys.argv[4] if len(sys.argv) > 4 else {'45.130.165.105': 'Singapore', '185.247.117.108': 'Амстердам'}.get(host, 'VPS-' + host))
 (root / 'connection.txt').write_text(uri + '\n')
 qrcode.make(uri).save(root / 'connection.png')
 config = {'log': {'loglevel': 'warning', 'access': 'none'},

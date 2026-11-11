@@ -3,9 +3,9 @@ $ErrorActionPreference = 'Stop'
 $root = $env:VPN_TEST_ROOT
 $exe = Join-Path $root '.artifacts\windows-xray\xray.exe'
 foreach ($name in @('singapore', 'amsterdam')) {
-    $config = Join-Path $root ('.secrets\windows-' + $name + '.json')
-    $stdout = Join-Path $root ('.secrets\windows-' + $name + '.out.log')
-    $stderr = Join-Path $root ('.secrets\windows-' + $name + '.err.log')
+    $config = Join-Path $root ('.secrets\' + $name + '\windows-client.json')
+    $stdout = Join-Path $root ('.secrets\' + $name + '\windows.out.log')
+    $stderr = Join-Path $root ('.secrets\' + $name + '\windows.err.log')
     $process = $null
     try {
         if (Get-NetTCPConnection -LocalPort 10818 -State Listen -ErrorAction SilentlyContinue) {

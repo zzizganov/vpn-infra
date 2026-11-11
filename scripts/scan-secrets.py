@@ -12,7 +12,7 @@ patterns = [r'-----BEGIN (?:OPENSSH|RSA|EC|PRIVATE).*?KEY-----',
             r'"privateKey"\s*:\s*"[A-Za-z0-9_-]{30,}"']
 failed = []
 for path in filter(None, paths):
-    if path.startswith(('.secrets/', '.artifacts/', '.venv/')) or path == 'inventory.ini':
+    if path.startswith(('.secrets/', '.artifacts/', '.venv/')) or pathlib.PurePosixPath(path).name == 'inventory.ini' or path == 'inventories/production.ini':
         failed.append(path)
         continue
     text = (repo / path).read_text(errors='replace')

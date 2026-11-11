@@ -1,31 +1,42 @@
-# Singapore VLESS + REALITY infrastructure
+# vpn-infra
 
-Ansible + Bash, Xray-core on TCP/443, VLESS with `xtls-rprx-vision`, REALITY over RAW/TCP. No Docker or management API on the VPS. SSH remains on its existing port. Xray runs as an unprivileged service account; secrets originate on the server and survive reruns.
+Shared Ansible/Bash infrastructure for two independent VLESS + REALITY servers: **Singapore** and **Амстердам**. Read [PROJECT_STATE.md](PROJECT_STATE.md) for deployed state and [AGENTS.md](AGENTS.md) for agent instructions. The GitHub repository remains private under its existing name.
 
-Architecture: device → encrypted REALITY connection → VPS:443 → Internet. REALITY target is independently checked for certificate validity, TLS 1.3 and H2 before deployment. Target/SNI defaults are examples and must pass this check from each new VPS.
-
-This branch deploys the additional VPS as the **«Амстердам»** profile. Its audited OS is Ubuntu 24.04.5; see [alternate deployment](docs/ALTERNATE-VPS.md). The original VPS and credentials are retained for comparison.
-
-## Quick start
-
-Use Ubuntu 24.04 for persistent deployments. Ubuntu 20.04 here is an explicitly accepted temporary compatibility experiment; standard support has ended and Ubuntu Pro is not attached.
-
-```bash
-python3 -m venv .venv
-. .venv/bin/activate
-pip install -r requirements.txt
-cp inventory.example.ini inventory.ini
-# Edit host, SSH identity, port and target. Verify host fingerprint independently.
-python3 scripts/prepare-artifacts.py
-ansible-playbook playbooks/bootstrap.yml
-# Change ansible_user to vpnadmin in inventory.ini after bootstrap succeeds.
-ansible-playbook playbooks/security.yml
-ansible-playbook playbooks/xray.yml
-ansible-playbook playbooks/verify.yml
-python3 scripts/export-client.py SERVER_IP
-python3 scripts/smoke-test.py SERVER_IP
+```text
+hosts/
+  singapore/   README.md, inventory.example.ini, local inventory.ini
+  amsterdam/   README.md, inventory.example.ini, local inventory.ini
+inventories/   production.example.ini, local production.ini
+.secrets/      singapore/, amsterdam/ — local credentials and QR, never in Git
+playbooks/     bootstrap.yml, security.yml, xray.yml, verify.yml
+scripts/       shared export, validation and diagnostics
 ```
 
-If using an encrypted SSH key, load it into ssh-agent locally and export SSH_AUTH_SOCK. Never pass passwords, private keys or tokens in command arguments, repository files or CI variables. CI has no production credentials and cannot deploy.
+Working baseline: TCP/443, VLESS, REALITY, Vision, mirror.init7.net SNI/target, chrome fingerprint, **spx=/ and spiderX=/**. The user reported successful connectivity after spx was added. Each host retains its own UUID and keypair. Device TUN/DNS leak testing remains outstanding.
 
-See [setup](docs/SETUP.md), [security](docs/SECURITY.md), [clients](docs/CLIENTS.md), [operations](docs/OPERATIONS.md), [recovery](docs/RECOVERY.md), [troubleshooting](docs/TROUBLESHOOTING.md), and [verification results](docs/VERIFICATION.md).
+## Use
+
+Run from this Git checkout. Install requirements in a local virtual environment. Copy inventories/production.example.ini to inventories/production.ini and review host/key settings; optionally use hosts/<site>/inventory.ini for a single host. Verify SSH host fingerprints independently and unlock the local key through ssh-agent. Credentials must never enter inventory or command arguments.
+
+```bash
+python3 scripts/prepare-artifacts.py
+ansible-playbook playbooks/verify.yml
+ansible-playbook playbooks/xray.yml --limit singapore
+ansible-playbook playbooks/xray.yml --limit amsterdam
+python3 scripts/export-client.py 45.130.165.105
+python3 scripts/export-client.py 185.247.117.108
+python3 scripts/smoke-test.py 45.130.165.105
+python3 scripts/smoke-test.py 185.247.117.108
+```
+
+Exports default to .secrets/singapore/ or .secrets/amsterdam/. Keep the Amsterdam display name when exporting explicitly:
+
+```bash
+python3 scripts/export-client.py 185.247.117.108 ~/.ssh/id_ed25519 .secrets/amsterdam 'Амстердам'
+```
+
+Fresh-server provisioning: run bootstrap.yml as the initial administrator, independently verify the created vpnadmin key and sudo access, switch the selected inventory to vpnadmin, then run security.yml, xray.yml and verify.yml. Existing servers already use vpnadmin; do not re-enable root/password SSH.
+
+CI only validates syntax and scans for secrets; it has no production access. Singapore's Ubuntu 20.04 without Pro is an accepted temporary experiment; use Ubuntu 24.04 for persistent new installations.
+
+[Setup](docs/SETUP.md) · [Security](docs/SECURITY.md) · [Clients](docs/CLIENTS.md) · [Operations](docs/OPERATIONS.md) · [Recovery](docs/RECOVERY.md) · [Troubleshooting](docs/TROUBLESHOOTING.md) · [Amsterdam history](docs/ALTERNATE-VPS.md)
