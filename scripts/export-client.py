@@ -18,7 +18,7 @@ root = (Path(sys.argv[3]).expanduser().resolve() if len(sys.argv) > 3
 root.mkdir(mode=0o700, parents=True, exist_ok=True)
 params = {'encryption': 'none', 'flow': 'xtls-rprx-vision', 'security': 'reality',
           'sni': client['serverName'], 'fp': 'chrome', 'pbk': client['publicKey'],
-          'sid': client['shortId'], 'type': 'tcp'}
+          'sid': client['shortId'], 'type': 'tcp', 'spx': '/'}
 uri = 'vless' + '://' + client['uuid'] + '@' + host + ':443?' + urllib.parse.urlencode(params) + '#' + urllib.parse.quote(sys.argv[4] if len(sys.argv) > 4 else 'VPS-' + host)
 (root / 'connection.txt').write_text(uri + '\n')
 qrcode.make(uri).save(root / 'connection.png')
@@ -28,7 +28,7 @@ config = {'log': {'loglevel': 'warning', 'access': 'none'},
               'users': [{'id': client['uuid'], 'encryption': 'none', 'flow': 'xtls-rprx-vision'}]}]},
               'streamSettings': {'network': 'raw', 'security': 'reality', 'realitySettings': {
                   'serverName': client['serverName'], 'fingerprint': 'chrome',
-                  'password': client['publicKey'], 'shortId': client['shortId']}}}]}
+                  'password': client['publicKey'], 'shortId': client['shortId'], 'spiderX': '/'}}}]}
 (root / 'client.json').write_text(json.dumps(config, indent=2) + '\n')
 for path in root.iterdir():
     if path.is_file():
